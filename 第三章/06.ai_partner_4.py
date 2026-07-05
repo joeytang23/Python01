@@ -13,6 +13,9 @@ st.set_page_config(
     menu_items={
     }
 )
+#生成会话名称
+def generate_session_name():
+    return datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 def save_session():
     if st.session_state.current_session:
         session_data = {
@@ -42,6 +45,14 @@ with st.sidebar:
         #保存当前会话信息
         save_session()
         #创建新会话
+        if st.session_state.messages:#如果聊天信息存在
+            st.session_state.messages = []
+            st.session_state.current_session = generate_session_name()
+            save_session()
+            st.rerun()
+
+
+    #伴侣信息
      st.subheader("伴侣信息")
      nick_name =  st.text_input("昵称",value="小甜甜",placeholder="请输入伴侣昵称")
      if nick_name:
@@ -76,7 +87,7 @@ if 'character' not in st.session_state:
     st.session_state['character'] = '温柔细腻的台湾姑娘'
     #会话表述
 if "current_session" not in st.session_state:
-    st.session_state.current_session = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    st.session_state.current_session = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
 
 #展示聊天信息
@@ -87,7 +98,6 @@ for message in st.session_state.messages:
     #else:
         #st.chat_message("assistant").write(message["content"])
 client = OpenAI(api_key=os.environ.get('DEEPSEEK_API_KEY'),base_url="https://api.deepseek.com")
-#输入框
 
 prompt = st.chat_input("请输入您的问题")
 if prompt:#字符串自动转换布尔值
@@ -118,5 +128,3 @@ if prompt:#字符串自动转换布尔值
             response_message.chat_message("assistant").write(full_response)
     # 添加AI助手消息到会话状态
     st.session_state.messages.append({"role": "assistant", "content": full_response})
-
-
