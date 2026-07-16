@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>我的小测试页面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #f0f8ff;
+            padding: 30px;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .intro {
+            font-size: 18px;
+            line-height: 1.8;
+            color: #34495e;
+            margin-bottom: 30px;
+        }
+        .img-box {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 40px 0;
+        }
+        .img-box img {
+            width: 280px;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px #ccc;
+        }
+        .desc {
+            text-align: center;
+            margin-top: 8px;
+            color: #666;
+        }
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>我喜欢的治愈日常</h1>
+        <div class="intro">
+            <p>我很喜欢安静松弛的生活：清晨温热的咖啡、傍晚天边的晚霞、深夜安静敲代码的时刻。</p>
+            <p>喜欢自然里温柔的风景，喜欢简单干净的文字，也喜欢Python爬虫、前端网页这类有趣的编程小工具。</p>
+            <p>平淡细碎的美好，最能让人放松下来。</p>
+        </div>
+
+        <!-- 图片区域，使用公开可访问的测试图链接，打开页面会自动加载 -->
+        <div class="img-box">
+            <div>
+                <img src="https://picsum.photos/id/1036/400/250" alt="山间湖泊风景">
+                <p class="desc">山野湖泊</p>
+            </div>
+            <div>
+                <img src="https://picsum.photos/id/1060/400/250" alt="海边落日">
+                <p class="desc">海边落日</p>
+            </div>
+            <div>
+                <img src="https://picsum.photos/id/1068/400/250" alt="城市书店">
+                <p class="desc">安静书店</p>
+            </div>
+        </div>
+
+        <footer>
+            测试HTML页面 · 用于爬虫/网页解析练习
+        </footer>
+    </div>
+</body>
+</html>
