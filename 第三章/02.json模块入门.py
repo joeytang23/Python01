@@ -4,7 +4,7 @@ import json
 # user = {
 #     "name" : "博崽",
 #     "age" : 18,
-#     "major" : "Spatial Information and digital technology",
+#    "major" : "Spatial Information and digital technology",
 #     "hobby" : ["Python","Gym"]
 # }
 # with open("resources/user.json","w",encoding = "utf-8")as f:

@@ -31,7 +31,32 @@ def save_session():
         with open(f"sessions/{st.session_state.current_session}.json", "w", encoding="utf-8") as f:
             json.dump(session_data, f, ensure_ascii=False, indent=2)
 
-#大标题
+#加载所有的会话列表信息
+def load_sessions():
+    session_list = []
+    if os.path.exists("sessions"):
+        file_list = os.listdir("sessions")
+        for filename in file_list:
+            if filename.endswith(".json"):
+                session_list.append(filename[:-5])
+    return session_list
+
+#加载指定某个会话的信息
+def load_session(session):
+    try:
+        if os.path.exists(f"sessions/{session}.json"):
+            with open(f"sessions/{session}.json", "r", encoding="utf-8"):
+                session_data = json.load(f)
+                st.session_state.nick_name = session_data["nick_name"]
+                st.session_state.character = session_data["character"]
+                st.session_state.messages = session_data["messages"]
+                st.session_state.current_session = session_data["current_session"]
+    except Exception :
+        st.error("加载会话失败!")
+
+
+
+
 st.title("AI智能伴侣")
 
 st.logo("resources/logo.png")
@@ -50,6 +75,25 @@ with st.sidebar:
             st.session_state.current_session = generate_session_name()
             save_session()
             st.rerun()
+
+     #会话历史
+     st.text("会话历史")
+     session_list = load_sessions()
+     for session in session_list:
+        col1,col2=st.columns([4,1])
+        with col1:
+            #加载会话信息
+            if st.button(session,icon="📄",width="stretch",key=f"load_{session}"):
+                load_session(session)
+                st.rerun()
+        with col2:
+            #删除会话信息
+            if st.button("",icon="🗑️",width="stretch",key=f"delete_{session}"):
+                os.remove(f"sessions/{session}.json")
+                st.rerun()
+
+
+
 
 
     #伴侣信息
@@ -128,3 +172,4 @@ if prompt:#字符串自动转换布尔值
             response_message.chat_message("assistant").write(full_response)
     # 添加AI助手消息到会话状态
     st.session_state.messages.append({"role": "assistant", "content": full_response})
+    save_session()
