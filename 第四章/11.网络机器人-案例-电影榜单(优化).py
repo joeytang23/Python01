@@ -1,0 +1,127 @@
+import requests
+import csv
+from lxml import html
+import time
+import re
+
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+}
+
+
+
+#常量
+MOVIE_LIST_FILE = "csv_data/movie_list2.csv"
+TMDB_BASE_URL="https://www.themoviedb.org"
+TMDB_TOP_URL = "https://www.themoviedb.org/movie/top-rated"
+TMDB_TOP_URL2 = "https://www.themoviedb.org/discover/movie/items"
+
+#获取电影详情
+
+#获取电影年份
+
+def get_movie_year(movie_years):
+    movie_year = movie_years[0].strip() if movie_years else ''
+    return movie_year.replace(")", "").replace("(", "")
+
+#获取电影上映时间
+
+def get_movie_publish_data(movie_dates):
+    movie_date = movie_dates[0].strip() if movie_dates else ''
+    return re.search(r"\d{4}-\d{2}-\d{2}", movie_date).group()
+#获取电影耗时,转化为分钟数
+def get_movie_runtime(movie_runtimes):
+    movie_runtime = movie_runtimes[0].strip() if movie_runtimes else ''
+    h_res = re.search(f"(\d+)h",movie_runtime)
+    m_res = re.search(f"(\d+)m",movie_runtime)
+    h = h_res.group(1) if h_res else '0'
+    m = m_res.group(1) if m_res else '0'
+    return int(h) * 60 + int(m)
+
+def get_movie_info(movie_info_url):
+    time.sleep(2)
+    #1.发送请求,获取电影详情数据
+    movie_response = requests.get(movie_info_url,timeout=60,headers=headers)
+
+
+
+    #2.解析数据,获取电影详情
+    movie_doc = html.fromstring(movie_response.text)
+
+    #电影名称,年份,时间,耗时,类型,评分,语言,简介等
+    movie_names = movie_doc.xpath("//*[@id='original_header']/div[2]/section/div[1]/h2/a/text()")
+    movie_years = movie_doc.xpath("//*[@id='original_header']/div[2]/section/div[1]/h2/span/text()")
+    movie_dates = movie_doc.xpath("//*[@id='original_header']/div[2]/section/div[1]/div/span[@class = 'release']/text()")
+    movie_tags = movie_doc.xpath("//*[@id='original_header']/div[2]/section/div[1]/div/span[@class = 'genres']/a/text()")
+    movie_runtimes = movie_doc.xpath("//*[@id='original_header']/div[2]/section/div[1]/div/span[@class = 'runtime']/text()")
+    movie_scores = movie_doc.xpath("//*[@id='consensus_pill']/div/div[1]/div/div/@data-percent")
+    movie_languages = movie_doc.xpath("//*[@id='media_v4']/div/div/div[2]/div/section/div[1]/div/section[1]/p[3]/text()")
+    movie_directors = movie_doc.xpath("//*[@id='original_header']/div[2]/section/div[3]/ol/li[1]/p[1]/a/text()")
+    movie_authors = movie_doc.xpath("//li[@class='profile']/p/a/text()")
+    movie_descriptions = movie_doc.xpath("//*[@id='original_header']/div[2]/section/div[3]/div/p/text()")
+
+
+
+    #3.返回电影详情,字典
+    movie_info = {
+        "电影名":movie_names[0].strip() if movie_names else '',
+        "年份":get_movie_year(movie_years),
+        "时间":get_movie_publish_data(movie_dates),
+        "耗时":get_movie_runtime(movie_runtimes),
+        "类型":",".join(movie_tags) if movie_tags else '',
+        "评分":movie_scores[0].strip() if movie_scores else '',
+        "语言":movie_languages[0].strip() if movie_languages else '',
+        "导演":movie_directors[0].strip() if movie_directors else '',
+        "编剧":movie_authors[0].strip() if movie_authors else '',
+        "简介":movie_descriptions[0].strip() if movie_descriptions else '',
+    }
+    print(movie_info)
+    return movie_info
+
+
+
+
+#保存所有电影
+def save_all_movies(all_movies):
+    with open(MOVIE_LIST_FILE, mode='w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=["电影名", "年份", "时间", "耗时", "类型", "评分", "语言", "导演", "编剧", "简介"])
+        writer.writeheader()  #写入表头
+        writer.writerows(all_movies)
+
+
+#主函数
+def main():
+    all_movies = []
+    for page_num in range(1,6):
+        if page_num == 1:
+            #1.发送请求,获取高分电影榜单数据
+            response = requests.get(TMDB_TOP_URL,timeout=60,headers=headers)
+        else:
+            response = requests.post(TMDB_TOP_URL2,
+                                    f"air_date.gte=&air_date.lte=&certification=&certification_country=HK&debug=&first_air_date.gte=&first_air_date.lte=&include_adult=false&include_softcore=false&latest_ceremony.gte=&latest_ceremony.lte=&page={page_num}&primary_release_date.gte=&primary_release_date.lte=&region=&release_date.gte=&release_date.lte=2027-01-18&show_me=everything&sort_by=vote_average.desc&vote_average.gte=0&vote_average.lte=10&vote_count.gte=300&watch_region=HK&with_genres=&with_keywords=&with_networks=&with_origin_country=&with_original_language=&with_watch_monetization_types=&with_watch_providers=&with_release_type=&with_runtime.gte=0&with_runtime.lte=400",
+                                    timeout=60, headers=headers,)
+        print("发送请求ing............")
+        #2.解析数据,获取电影列表
+        document = html.fromstring(response.text)
+        # 直接匹配每个电影卡片
+        movie_list = document.xpath("//div[@class='media-list-results contents']/div")
+
+
+        for movie in movie_list:  # movie 现在就是每个 comp:poster-card
+            movie_info_urls = movie.xpath(".//a/@href")  # 用 .// 在当前卡片里找所有 a 标签
+            # 然后过滤出电影链接...
+            if movie_info_urls:
+                movie_info_url = TMDB_BASE_URL + movie_info_urls[0]
+                movie_info =get_movie_info(movie_info_url)
+                all_movies.append(movie_info)
+    #4.保存数据为csv文件
+    print("保存数据为csv文件..........")
+    save_all_movies(all_movies)
+
+
+if __name__ == '__main__':
+    main()
